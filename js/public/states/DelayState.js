@@ -1,3 +1,9 @@
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -34,44 +40,53 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-import Events from "../util/Events.js";
-import StateStack from "./StateStack.js";
-var State = /** @class */ (function () {
-    function State(stateStack) {
+import State from "../core/State.js";
+import { ChildOf } from "../util/functions.js";
+var DelayState = /** @class */ (function () {
+    function DelayState(stateStack, totalFrames) {
+        if (totalFrames === void 0) { totalFrames = 60; }
         this.stateStack = stateStack;
-        this.toUpdate = null;
-        this.toRender = null;
-        this.blocking = true;
-        this.subStateStack = new StateStack(this, this.stateStack.game);
-        this.evtHandler = new Events.Handler();
+        this.totalFrames = totalFrames;
+        this.elapsedFrames = 0;
+        State.call(this, stateStack);
     }
-    State.prototype.preload = function (loader) {
-        return __awaiter(this, void 0, void 0, function () { return __generator(this, function (_a) {
-            return [2 /*return*/];
-        }); });
-    };
-    State.prototype.update = function (input) { };
-    State.prototype.render = function (ctx) { };
-    Object.defineProperty(State.prototype, "index", {
-        get: function () { return this.stateStack.states.indexOf(this); },
+    DelayState_1 = DelayState;
+    Object.defineProperty(DelayState.prototype, "remainingFrames", {
+        get: function () {
+            return this.totalFrames - this.elapsedFrames - 1;
+        },
         enumerable: false,
         configurable: true
     });
-    State.prototype.remove = function () {
-        this.stateStack.remove(this.index);
+    DelayState.prototype.update = function () {
+        if (this.remainingFrames <= 0) {
+            this.remove();
+            return;
+        }
+        this.elapsedFrames++;
     };
-    State.prototype.waitForRemoval = function () {
+    DelayState.create = function (ss, frames) {
         return __awaiter(this, void 0, void 0, function () {
-            var _this = this;
+            var ds;
             return __generator(this, function (_a) {
-                return [2 /*return*/, new Promise(function (resolve, reject) {
-                        _this.evtHandler.addEventListener('remove', function () {
-                            resolve();
-                        });
-                    })];
+                switch (_a.label) {
+                    case 0:
+                        ds = new DelayState_1(ss, frames);
+                        return [4 /*yield*/, ss.push(ds)];
+                    case 1:
+                        _a.sent();
+                        return [4 /*yield*/, ds.waitForRemoval()];
+                    case 2:
+                        _a.sent();
+                        return [2 /*return*/];
+                }
             });
         });
     };
-    return State;
+    var DelayState_1;
+    DelayState = DelayState_1 = __decorate([
+        ChildOf(State)
+    ], DelayState);
+    return DelayState;
 }());
-export default State;
+export default DelayState;

@@ -21,6 +21,20 @@ class State implements Preloadable, Updatable, Renderable {
 	public async preload(loader: Loader) { }
 	public update(input: Input) { }
 	public render(ctx: CanvasRenderingContext2D) { }
+
+	public get index() { return this.stateStack.states.indexOf(this) }
+
+	public remove() {
+		this.stateStack.remove(this.index);
+	}
+
+	public async waitForRemoval() {
+		return new Promise<void>((resolve, reject) => {
+			this.evtHandler.addEventListener('remove', () => {
+				resolve();
+			})
+		})
+	}
 }
 
 export default State;
