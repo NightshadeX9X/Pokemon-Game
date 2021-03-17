@@ -34,21 +34,24 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+import Events from "../util/Events.js";
 import StateStack from "./StateStack.js";
 var State = /** @class */ (function () {
     function State(stateStack) {
         this.stateStack = stateStack;
         this.toUpdate = null;
         this.toRender = null;
-        this.subStateStack = new StateStack();
+        this.blocking = true;
+        this.subStateStack = new StateStack(this, this.stateStack.game);
+        this.evtHandler = new Events.Handler();
     }
-    State.prototype.preload = function () {
+    State.prototype.preload = function (loader) {
         return __awaiter(this, void 0, void 0, function () { return __generator(this, function (_a) {
             return [2 /*return*/];
         }); });
     };
-    State.prototype.update = function () { };
-    State.prototype.render = function () { };
+    State.prototype.update = function (input) { };
+    State.prototype.render = function (ctx) { };
     return State;
 }());
 export default State;

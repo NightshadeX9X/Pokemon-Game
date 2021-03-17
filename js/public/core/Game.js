@@ -34,18 +34,37 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+import BlackScreenState from "../states/BlackScreenState.js";
+import Input from "./Input.js";
+import Loader from "./Loader.js";
+import StateStack from "./StateStack.js";
 var Game = /** @class */ (function () {
     function Game() {
+        this.loader = new Loader();
+        this.input = new Input();
         this.cnv = document.getElementById('screen');
         this.ctx = this.cnv.getContext('2d');
+        this.subStateStack = new StateStack(this, this);
+        this.fps = 60;
     }
     Game.prototype.preload = function () {
-        return __awaiter(this, void 0, void 0, function () { return __generator(this, function (_a) {
-            return [2 /*return*/];
-        }); });
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.subStateStack.push(new BlackScreenState(this.subStateStack))];
+                    case 1:
+                        _a.sent();
+                        return [2 /*return*/];
+                }
+            });
+        });
     };
-    Game.prototype.update = function () { };
-    Game.prototype.render = function () { };
+    Game.prototype.update = function () {
+        this.subStateStack.update(this.input);
+    };
+    Game.prototype.render = function () {
+        this.subStateStack.render(this.ctx);
+    };
     return Game;
 }());
 export default Game;

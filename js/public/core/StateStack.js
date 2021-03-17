@@ -34,10 +34,14 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+import Events from "../util/Events.js";
 import { insertIntoArray } from "../util/functions.js";
 var StateStack = /** @class */ (function () {
-    function StateStack() {
+    function StateStack(parent, game) {
+        this.parent = parent;
+        this.game = game;
         this.states = [];
+        this.evtHandler = new Events.Handler();
     }
     StateStack.prototype.insert = function (state, index) {
         if (index === void 0) { index = 0; }
@@ -45,10 +49,12 @@ var StateStack = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        insertIntoArray(this.states, index, [state]);
-                        return [4 /*yield*/, state.preload()];
+                        this.states = insertIntoArray(this.states, index, [state]);
+                        return [4 /*yield*/, state.preload(this.game.loader)];
                     case 1:
                         _a.sent();
+                        this.evtHandler.dispatchEvent('insert state', state, index);
+                        state.evtHandler.dispatchEvent('insert', this, index);
                         return [2 /*return*/];
                 }
             });
@@ -66,13 +72,49 @@ var StateStack = /** @class */ (function () {
             });
         });
     };
-    StateStack.prototype.preload = function () {
-        return __awaiter(this, void 0, void 0, function () { return __generator(this, function (_a) {
-            return [2 /*return*/];
-        }); });
+    StateStack.prototype.remove = function (index) {
+        var state = this.states.splice(index, 1)[0];
+        this.evtHandler.dispatchEvent('remove state', state, index);
+        state.evtHandler.dispatchEvent('remove', this, index);
     };
-    StateStack.prototype.update = function () { };
-    StateStack.prototype.render = function () { };
+    StateStack.prototype.fromTop = function (n, ignoreNonBlocking) {
+        if (n === void 0) { n = 0; }
+        if (ignoreNonBlocking === void 0) { ignoreNonBlocking = false; }
+        var states = ignoreNonBlocking ? this.states.filter(function (s) { return s.blocking; }) : this.states;
+        return states[this.states.length - 1 - n];
+    };
+    StateStack.prototype.fromBottom = function (n, ignoreNonBlocking) {
+        if (n === void 0) { n = 0; }
+        if (ignoreNonBlocking === void 0) { ignoreNonBlocking = false; }
+        var states = ignoreNonBlocking ? this.states.filter(function (s) { return s.blocking; }) : this.states;
+        return states[n];
+    };
+    StateStack.prototype.defaultToRenderState = function (s) { return this.states.includes(s); };
+    StateStack.prototype.defaultToUpdateState = function (s) {
+        return this.fromTop(0, true) === s;
+    };
+    StateStack.prototype.toRenderState = function (s) {
+        if (s.toRender !== null)
+            return s.toRender;
+        return this.defaultToRenderState(s);
+    };
+    StateStack.prototype.toUpdateState = function (s) {
+        if (s.toUpdate !== null)
+            return s.toUpdate;
+        return this.defaultToUpdateState(s);
+    };
+    StateStack.prototype.update = function (input) {
+        var _this = this;
+        this.states.filter(function (s) { return _this.toUpdateState(s); }).forEach(function (s) {
+            s.update(input);
+        });
+    };
+    StateStack.prototype.render = function (ctx) {
+        var _this = this;
+        this.states.filter(function (s) { return _this.toRenderState(s); }).forEach(function (s) {
+            s.render(ctx);
+        });
+    };
     return StateStack;
 }());
 export default StateStack;
