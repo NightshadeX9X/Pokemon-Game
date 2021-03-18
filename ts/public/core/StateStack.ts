@@ -21,7 +21,6 @@ class StateStack implements Updatable, Renderable {
 		this.evtHandler.dispatchEvent('insert state', state, index);
 		state.evtHandler.dispatchEvent('insert', this, index);
 	}
-
 	public async push(state: State) {
 		await this.insert(state, this.states.length);
 	}
@@ -31,6 +30,14 @@ class StateStack implements Updatable, Renderable {
 
 		this.evtHandler.dispatchEvent('remove state', state, index);
 		state.evtHandler.dispatchEvent('remove', this, index);
+	}
+	public pop() {
+		this.remove(this.states.length - 1);
+	}
+
+	public async replace(state: State, index: number) {
+		this.remove(index);
+		await this.insert(state, index);
 	}
 
 	public fromTop(n = 0, ignoreNonBlocking = false) {

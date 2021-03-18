@@ -11,16 +11,27 @@ class State implements Preloadable, Updatable, Renderable {
 	public blocking = true;
 
 	protected subStateStack = new StateStack(this, this.stateStack.game);
+	protected backgroundProcesses = new StateStack(this, this.stateStack.game);
 
 	public evtHandler = new Events.Handler();
 
 	constructor(public stateStack: StateStack) {
-
+		this.backgroundProcesses.insert = async (state, index) => {
+			state.blocking = false;
+			state.toUpdate = true;
+			await StateStack.prototype.insert.call(this.backgroundProcesses, state, index);
+		};
 	}
 
 	public async preload(loader: Loader) { }
-	public update(input: Input) { }
-	public render(ctx: CanvasRenderingContext2D) { }
+	public update(input: Input) {
+		this.subStateStack.update(input);
+		this.backgroundProcesses.update(input);
+	}
+	public render(ctx: CanvasRenderingContext2D) {
+		this.subStateStack.render(ctx);
+		this.backgroundProcesses.render(ctx);
+	}
 
 	public get index() { return this.stateStack.states.indexOf(this) }
 
